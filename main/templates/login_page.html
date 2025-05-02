@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StyleGenie</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}?v=123" />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">StyleGenie</div>
+      <nav>
+        <a href="#">Home</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="overlay"></div>
+      <div class="hero-content">
+        <h1>AI-Powered Outfit Generation</h1>
+        <p>
+          Upload your cropped shirt, choose a bottom style, and let StyleGenie
+          generate your perfect outfit.
+        </p>
+        <a href="#features" class="cta-btn">Try It Now</a>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section fea" id="features">
+      <h2 class="title">How It Works</h2>
+      <div class="section wrapper">
+        <ol class="steps">
+          <li>Upload an image containing shirt</li>
+          <br>
+          <li>Select pants, skirt, or dress </li>
+          <br>
+          <li>StyleGenie will generates a full outfit for you</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="section up" id="upload">
+      <h2>Upload Your Shirt</h2>
+      <input type="file" accept="image/*" />
+      <p>Select an image of a cropped shirt to get started.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2025 StyleGenie. All rights reserved.</p>
+    </footer>
+  </body>
+</html>
