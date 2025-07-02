@@ -8,6 +8,15 @@ style_prompt_map = {
     "bohemian": "a bohemian outfit",
     "streetwear": "a streetwear outfit",
 }
+# build prompts for outfit generation based on user input and selected tags.
+def build_prompt(tag: str, item_type: str = "shirt") -> str: # shirt as default
+    base = style_prompt_map.get(tag, "")
+    return f"Generate an outfit to match this {item_type}, featuring {base}."
+
+def get_final_prompt(user_text: str, selected_tag: str) -> str:
+    if user_text.strip():
+        return user_text.strip()
+    return build_prompt(selected_tag)
 
 
 
