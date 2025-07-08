@@ -47,8 +47,8 @@
       <img
         id="resultImage"
         src=""
-        alt="Generated outfit"
-        style="max-width: 400px; border: 1px solid #ccc"
+        alt="Generated Outfit"
+        style="max-width: 100%"
       />
     </div>
 
@@ -71,6 +71,7 @@
         const data = await response.json();
 
         if (data.error) {
+          featuring;
           alert("Error: " + data.error);
         } else {
           document.getElementById("resultPrompt").textContent =
