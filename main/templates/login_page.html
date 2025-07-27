@@ -5,81 +5,76 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StyleGenie</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
   <body>
-    <header class="navbar">
-      <div class="logo">StyleGenie</div>
-    </header>
+    <div class="container">
+      <!-- LEFT: Input Form -->
+      <div class="left-panel">
+        <h1>StyleGenie</h1>
+        <form id="generateForm" enctype="multipart/form-data">
+          {% csrf_token %}
 
-    <h1>Upload a Clothing Item</h1>
+          <div class="form-group">
+            <label for="image">Upload up to 4 images:</label>
+            <input
+              type="file"
+              name="image"
+              id="imageInput"
+              accept="image/*"
+              multiple
+              required
+            />
+            <div id="previewContainer"></div>
+          </div>
 
-    <form id="generateForm" enctype="multipart/form-data">
-      {% csrf_token %}
-      <label for="image">Upload Image:</label><br />
-      <input type="file" name="image" required /><br /><br />
+          <div class="form-group">
+            <label for="prompt">Custom Prompt:</label>
+            <input
+              type="text"
+              name="prompt"
+              placeholder="e.g. Make it elegant and red"
+            />
+          </div>
 
-      <label for="prompt">Custom Prompt (optional):</label><br />
-      <input
-        type="text"
-        name="prompt"
-        placeholder="e.g. Make it elegant and red"
-      /><br /><br />
+          <div class="form-group">
+            <label for="style_tag">Select a Style:</label>
+            <select name="style_tag">
+              <option value="">-- Choose a style --</option>
+              <option value="Casual">Casual</option>
+              <option value="Minimalist">Minimalist</option>
+              <option value="Evening Wear">Evening Wear</option>
+              <option value="Sporty">Sporty</option>
+              <option value="Streetwear">Streetwear</option>
+              <option value="Business Casual">Business Casual</option>
+            </select>
+          </div>
 
-      <label for="style_tag">Or select a style:</label><br />
-      <select name="style_tag">
-        <option value="">-- Choose a style --</option>
-        <option value="Casual">Casual</option>
-        <option value="Minimalist">Minimalist</option>
-        <option value="Evening Wear">Evening Wear</option>
-        <option value="Sporty">Sporty</option>
-        <option value="Streetwear">Streetwear</option></select
-      ><br /><br />
+          <button type="submit">Generate Outfit</button>
+        </form>
+      </div>
 
-      <button type="submit">Generate Outfit</button>
-    </form>
-
-    <hr />
-
-    <div id="resultArea" style="display: none">
-      <h2>Generated Outfit</h2>
-      <p><strong>Prompt:</strong> <span id="resultPrompt"></span></p>
-      <p><strong>Generated Image:</strong></p>
-      <img
-        id="resultImage"
-        src=""
-        alt="Generated Outfit"
-        style="max-width: 100%"
-      />
+      <!-- RIGHT: Output Display -->
+      <div class="right-panel">
+        <div id="resultArea" style="display: none">
+          <h2>Generated Image</h2>
+          <p><strong>Prompt:</strong> <span id="resultPrompt"></span></p>
+          <img id="resultImage" src="" alt="Generated Outfit" />
+          <a
+            id="downloadBtn"
+            href="#"
+            download="generated_outfit.webp"
+            style="margin-top: 10px; color: #1976d2; display: none"
+            >Download full resolution</a
+          >
+        </div>
+      </div>
     </div>
 
-    <script>
-      const form = document.getElementById("generateForm");
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(form);
-
-        const response = await fetch("/main/generate/", {
-          method: "POST",
-          body: formData,
-          headers: {
-            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
-              .value
-          }
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-          featuring;
-          alert("Error: " + data.error);
-        } else {
-          document.getElementById("resultPrompt").textContent =
-            data.prompt_used;
-          document.getElementById("resultImage").src = data.generated_image_url;
-          document.getElementById("resultArea").style.display = "block";
-        }
-      });
-    </script>
+    <!-- Image Zoom Modal -->
+    <div id="imageModal">
+      <img id="zoomedImage" src="" />
+    </div>
+    <script src="{% static 'main.js' %}"></script>
   </body>
 </html>
