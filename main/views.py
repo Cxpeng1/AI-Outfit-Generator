@@ -6,7 +6,12 @@ from django.shortcuts import render
 from gradio_client import Client, handle_file
 import shutil
 import traceback
-
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+@login_required
 def login_page(request):
     return render(request, 'login_page.html')
 
@@ -73,3 +78,18 @@ def generate_outfit(request):
         })
 
     return JsonResponse({"error": "Only POST method is allowed."}, status=405)
+
+from django.contrib.auth.forms import UserCreationForm
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account created successfully! Please log in.")
+            return redirect('login')  # redirects to login view
+        else:
+            print(form.errors)  # Debug in terminal
+    else:
+        form = UserCreationForm()
+    return render(request, 'register.html', {'form': form})
