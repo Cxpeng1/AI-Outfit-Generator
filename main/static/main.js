@@ -1,100 +1,141 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const imageInput = document.getElementById("imageInput");
-    const previewContainer = document.getElementById("previewContainer");
-    const imageModal = document.getElementById("imageModal");
-    const zoomedImage = document.getElementById("zoomedImage");
-    const form = document.getElementById("generateForm");
+// Title: MASA / StyleGenie Main Script (fixed)
+document.addEventListener('DOMContentLoaded', () => {
+  const API_ENDPOINT = '/main/generate/';
 
-    let selectedImages = [];
+  const form = document.getElementById('generateForm');
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('imageInput');
+  const preview = document.getElementById('previewContainer');
 
-    function updatePreviews() {
-      previewContainer.innerHTML = "";
+  const resultArea = document.getElementById('resultArea');
+  const emptyState = document.getElementById('emptyState');
+  const resultImage = document.getElementById('resultImage');
+  const resultPrompt = document.getElementById('resultPrompt');
+  const loadingSkeleton = document.getElementById('loadingSkeleton');
+  const downloadBtn = document.getElementById('downloadBtn');
 
-      selectedImages.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const wrapper = document.createElement("div");
-          wrapper.className = "preview-wrapper";
+  const imageModal = document.getElementById('imageModal');
+  const zoomedImage = document.getElementById('zoomedImage');
 
-          const img = document.createElement("img");
-          img.src = e.target.result;
-          img.style.maxWidth = "80px";
+  let selected = [];
 
-          img.addEventListener("click", () => {
-            zoomedImage.src = img.src;
-            imageModal.style.display = "flex";
-          });
+  function renderPreviews() {
+    preview.innerHTML = '';
+    dropzone.classList.toggle('has-files', selected.length > 0);
 
-          const removeBtn = document.createElement("span");
-          removeBtn.textContent = "×";
-          removeBtn.className = "remove-btn";
-          removeBtn.addEventListener("click", () => {
-            selectedImages.splice(index, 1);
-            updatePreviews();
-          });
+    selected.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const wrap = document.createElement('div');
+        wrap.className = 'preview-wrapper';
 
-          wrapper.appendChild(img);
-          wrapper.appendChild(removeBtn);
-          previewContainer.appendChild(wrapper);
-        };
-        reader.readAsDataURL(file);
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.alt = `upload ${idx+1}`;
+        img.addEventListener('click', (ev) => {
+          ev.stopPropagation(); // don’t trigger dropzone click
+          zoomedImage.src = img.src;
+          imageModal.style.display = 'flex';
+        });
+        wrap.appendChild(img);
+
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.className = 'remove-btn';
+        x.textContent = '×';
+        x.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          selected.splice(idx, 1);
+          renderPreviews();
+        });
+        wrap.appendChild(x);
+
+        preview.appendChild(wrap);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function addFiles(files) {
+    if (!files || !files.length) return;
+    const room = Math.max(0, 4 - selected.length);
+    const imgs = Array.from(files).slice(0, room).filter(f => f.type.startsWith('image/'));
+    selected = selected.concat(imgs);
+    renderPreviews();
+  }
+
+  // Make the whole rectangle open the file dialog (except when clicking on a preview/remove)
+  dropzone.addEventListener('click', (e) => {
+    if (e.target.closest('.preview-wrapper') || e.target.closest('.remove-btn')) return;
+    fileInput.click();
+  });
+
+  // Use classic input for selection
+  fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+  // Drag & drop
+  ['dragenter','dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('is-dragover'); })
+  );
+  ['dragleave','drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('is-dragover'); })
+  );
+  dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+  // Modal close
+  imageModal.addEventListener('click', () => imageModal.style.display = 'none');
+
+  // CSRF helper (Django)
+  function getCookie(name) {
+    const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[2]) : null;
+  }
+
+  function showLoading(promptText) {
+    emptyState.style.display = 'none';
+    resultArea.style.display = 'block';
+    loadingSkeleton.style.display = 'flex';
+    resultImage.src = '';
+    resultPrompt.textContent = promptText || 'Generating outfit…';
+    downloadBtn.style.display = 'none';
+  }
+
+  function showResult(imageUrl, promptText) {
+    loadingSkeleton.style.display = 'none';
+    resultImage.src = imageUrl || '';
+    resultPrompt.textContent = promptText || '';
+    downloadBtn.href = imageUrl || '#';
+    downloadBtn.style.display = imageUrl ? 'inline-block' : 'none';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fd = new FormData();
+    selected.forEach(file => fd.append('image', file));
+    fd.append('prompt', form.elements['prompt'].value || '');
+    fd.append('style_tag', form.elements['style_tag'].value || '');
+
+    showLoading('Generating outfit…');
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') || '' },
+        body: fd,
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      const dataTransfer = new DataTransfer();
-      selectedImages.forEach(file => dataTransfer.items.add(file));
-      imageInput.files = dataTransfer.files;
+      const promptUsed = data.prompt_used || fd.get('prompt') || '';
+      const urls = Array.isArray(data.generated_image_url) ? data.generated_image_url : [];
+      const firstUrl = urls.length ? urls[urls.length - 1] : '';
+
+      showResult(firstUrl, promptUsed);
+    } catch (err) {
+      console.error(err);
+      showResult('', 'Generation failed');
+      resultPrompt.textContent = 'Generation failed. Please try again.';
     }
-
-    imageInput.addEventListener("change", function () {
-      const newFiles = Array.from(imageInput.files);
-      selectedImages = selectedImages.concat(newFiles);
-
-      const fileMap = new Map();
-      selectedImages.forEach(file => fileMap.set(file.name, file));
-      selectedImages = Array.from(fileMap.values());
-
-      if (selectedImages.length > 4) {
-        alert("You can only upload up to 4 images.");
-        selectedImages = selectedImages.slice(0, 4);
-      }
-
-      updatePreviews();
-    });
-
-    imageModal.addEventListener("click", function (e) {
-      if (e.target === imageModal) {
-        imageModal.style.display = "none";
-        zoomedImage.src = "";
-      }
-    });
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      document.getElementById("resultArea").style.display = "block";
-      document.getElementById("resultPrompt").textContent = "Generating outfit...";
-      document.getElementById("resultImage").style.display = "none";
-      document.getElementById("downloadBtn").style.display = "none";
-
-      const formData = new FormData(form);
-      const response = await fetch("/main/generate/", {
-        method: "POST",
-        body: formData,
-        headers: {
-          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        alert("Error: " + data.error);
-      } else {
-        document.getElementById("resultPrompt").textContent = data.prompt_used;
-        document.getElementById("resultImage").src = data.generated_image_url;
-        document.getElementById("resultImage").style.display = "block";
-        document.getElementById("downloadBtn").href = data.generated_image_url;
-        document.getElementById("downloadBtn").style.display = "inline-block";
-      }
-    });
+  });
 });

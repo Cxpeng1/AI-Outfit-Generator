@@ -1,3 +1,4 @@
+<!-- Title: MASA / StyleGenie Main Page (HTML) -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,39 +9,72 @@
     <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
   <body>
+    <!-- Background Layer -->
+    <div class="page-bg" aria-hidden="true">
+      <div class="split"></div>
+      <div class="texture"></div>
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
     <div class="container">
       <!-- LEFT: Input Form -->
-      <div class="left-panel">
-        <h1>StyleGenie</h1>
-        <form id="generateForm" enctype="multipart/form-data">
+      <div class="panel left-panel">
+        <header class="brand">
+          <h1>StyleGenie</h1>
+          <p class="tagline">Build a complete outfit from one item</p>
+        </header>
+
+        <form id="generateForm" enctype="multipart/form-data" class="form">
           {% csrf_token %}
 
+          <!-- Dropzone WITH previews inside -->
           <div class="form-group">
-            <label for="image">Upload up to 4 images:</label>
-            <input
-              type="file"
-              name="image"
-              id="imageInput"
-              accept="image/*"
-              multiple
-              required
-            />
-            <div id="previewContainer"></div>
+            <label for="image">Upload up to 4 images</label>
+            <div class="dropzone" id="dropzone">
+              <input
+                type="file"
+                name="image"
+                id="imageInput"
+                accept="image/*"
+                multiple
+                required
+              />
+              <span class="dz-text">Drag & drop or click to upload</span>
+
+              <!-- Previews appear inside the dashed rectangle -->
+              <div id="previewContainer" class="previews in-dropzone"></div>
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="prompt">Custom Prompt:</label>
+            <label for="promptInput">Custom Prompt</label>
+            <!-- One field users can type in, or choose a suggestion from -->
             <input
               type="text"
+              id="promptInput"
               name="prompt"
-              placeholder="e.g. Make it elegant and red"
+              list="promptSuggestions"
+              placeholder="Type your own… or pick a suggestion"
+              autocomplete="off"
             />
+
+            <!-- Suggestions shown when the input is focused/typed into -->
+            <datalist id="promptSuggestions">
+              <option value="Minimal, neutral palette with white sneakers">
+              <option value="Streetwear style with ripped jeans and high-top sneakers">
+              <option value="Business casual with tailored pants and loafers">
+              <option value="Summer look with denim shorts and sandals">
+              <option value="Elegant evening outfit with heels and a clutch">
+              <option value="Soft pastel palette with light denim and white sneakers">
+              <option value="Monochrome black outfit with layered textures">
+            </datalist>
           </div>
 
           <div class="form-group">
-            <label for="style_tag">Select a Style:</label>
+            <label for="style_tag">Select a Style</label>
             <select name="style_tag">
-              <option value="">-- Choose a style --</option>
+              <option value="">— Choose a style —</option>
               <option value="Casual">Casual</option>
               <option value="Minimalist">Minimalist</option>
               <option value="Evening Wear">Evening Wear</option>
@@ -50,31 +84,51 @@
             </select>
           </div>
 
-          <button type="submit">Generate Outfit</button>
+          <button type="submit" class="btn-primary">Generate Outfit</button>
         </form>
       </div>
 
       <!-- RIGHT: Output Display -->
-      <div class="right-panel">
-        <div id="resultArea" style="display: none">
+      <div class="panel right-panel">
+        <div id="resultArea" class="result">
           <h2>Generated Image</h2>
-          <p><strong>Prompt:</strong> <span id="resultPrompt"></span></p>
-          <img id="resultImage" src="" alt="Generated Outfit" />
+
+          <div class="prompt-pill">
+            <strong>Prompt:</strong>
+            <span id="resultPrompt">Generating outfit…</span>
+          </div>
+
+          <div class="image-frame">
+            <img id="resultImage" alt="Generated Outfit" />
+            <div class="skeleton" id="loadingSkeleton" style="display:none;">
+              Generating outfit…
+            </div>
+          </div>
+
           <a
             id="downloadBtn"
             href="#"
             download="generated_outfit.webp"
-            style="margin-top: 10px; color: #1976d2; display: none"
+            class="btn-link"
+            style="display:none"
             >Download full resolution</a
           >
+        </div>
+
+        <!-- Empty state before first generation -->
+        <div id="emptyState" class="empty">
+          <div class="empty-illustration">👗</div>
+          <p class="empty-title">Your outfit will appear here</p>
+          <p class="empty-sub">Upload a shirt and click “Generate Outfit”.</p>
         </div>
       </div>
     </div>
 
     <!-- Image Zoom Modal -->
-    <div id="imageModal">
+    <div id="imageModal" class="modal">
       <img id="zoomedImage" src="" />
     </div>
+
     <script src="{% static 'main.js' %}"></script>
   </body>
 </html>
