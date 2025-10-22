@@ -268,7 +268,7 @@ select:focus {
   margin: 0 0 10px;
 }
 .prompt-pill {
-  display: inline-flex;
+  display: none;
   gap: 8px;
   align-items: center;
   padding: 8px 12px;

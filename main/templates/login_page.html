@@ -45,11 +45,18 @@
               <!-- Previews appear inside the dashed rectangle -->
               <div id="previewContainer" class="previews in-dropzone"></div>
             </div>
+
+            <!-- NEW: Crop button to segment/replace the 1st image -->
+            <div class="inline-actions" style="margin-top:10px;">
+              <button type="button" id="cropBtn" class="btn-secondary">Crop Shirt</button>
+              {% comment %} <small class="muted" style="margin-left:8px;">
+                Uses your trained model to isolate the shirt and replaces the first image above.
+              </small> {% endcomment %}
+            </div>
           </div>
 
           <div class="form-group">
             <label for="promptInput">Custom Prompt</label>
-            <!-- One field users can type in, or choose a suggestion from -->
             <input
               type="text"
               id="promptInput"
@@ -58,8 +65,6 @@
               placeholder="Type your own… or pick a suggestion"
               autocomplete="off"
             />
-
-            <!-- Suggestions shown when the input is focused/typed into -->
             <datalist id="promptSuggestions">
               <option value="Minimal, neutral palette with white sneakers">
               <option value="Streetwear style with ripped jeans and high-top sneakers">
@@ -111,11 +116,9 @@
             download="generated_outfit.webp"
             class="btn-link"
             style="display:none"
-            >Download full resolution</a
-          >
+            >Download full resolution</a>
         </div>
 
-        <!-- Empty state before first generation -->
         <div id="emptyState" class="empty">
           <div class="empty-illustration">👗</div>
           <p class="empty-title">Your outfit will appear here</p>
@@ -124,7 +127,6 @@
       </div>
     </div>
 
-    <!-- Image Zoom Modal -->
     <div id="imageModal" class="modal">
       <img id="zoomedImage" src="" />
     </div>

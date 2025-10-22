@@ -1,6 +1,7 @@
-// Title: MASA / StyleGenie Main Script (fixed)
+// Title: MASA / StyleGenie Main Script (with segmentation replace-first)
 document.addEventListener('DOMContentLoaded', () => {
   const API_ENDPOINT = '/main/generate/';
+  const CROP_ENDPOINT = '/main/segment_shirt/';     // NEW
 
   const form = document.getElementById('generateForm');
   const dropzone = document.getElementById('dropzone');
@@ -16,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const imageModal = document.getElementById('imageModal');
   const zoomedImage = document.getElementById('zoomedImage');
+
+  const cropBtn = document.getElementById('cropBtn'); // NEW
 
   let selected = [];
 
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = e.target.result;
         img.alt = `upload ${idx+1}`;
         img.addEventListener('click', (ev) => {
-          ev.stopPropagation(); // don’t trigger dropzone click
+          ev.stopPropagation();
           zoomedImage.src = img.src;
           imageModal.style.display = 'flex';
         });
@@ -49,6 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
           renderPreviews();
         });
         wrap.appendChild(x);
+
+        // small badge if cropped (inferred by filename)
+        if (file.name && /cropped_/i.test(file.name)) {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = 'CROPPED';
+          wrap.appendChild(badge);
+        }
 
         preview.appendChild(wrap);
       };
@@ -70,10 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.click();
   });
 
-  // Use classic input for selection
   fileInput.addEventListener('change', e => addFiles(e.target.files));
 
-  // Drag & drop
   ['dragenter','dragover'].forEach(evt =>
     dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('is-dragover'); })
   );
@@ -82,10 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
   );
   dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
-  // Modal close
   imageModal.addEventListener('click', () => imageModal.style.display = 'none');
 
-  // CSRF helper (Django)
   function getCookie(name) {
     const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return m ? decodeURIComponent(m[2]) : null;
@@ -107,6 +114,45 @@ document.addEventListener('DOMContentLoaded', () => {
     downloadBtn.href = imageUrl || '#';
     downloadBtn.style.display = imageUrl ? 'inline-block' : 'none';
   }
+
+  // NEW: Crop (segment) and REPLACE selected[0]
+  cropBtn.addEventListener('click', async () => {
+    if (selected.length === 0) {
+      alert('Please upload a shirt image first.');
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('image', selected[0]);        // only first image
+
+    cropBtn.disabled = true;
+    const originalText = cropBtn.textContent;
+    cropBtn.textContent = 'Cropping…';
+
+    try {
+      const res = await fetch(CROP_ENDPOINT, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') || '' },
+        body: fd,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // fetch the returned PNG and turn it into a File so it behaves like an upload
+      const blob = await fetch(data.segmented_url, { cache: 'no-store' }).then(r => r.blob());
+      const croppedFile = new File([blob], `cropped_${Date.now()}.png`, { type: 'image/png' });
+
+      // replace first slot and re-render
+      selected[0] = croppedFile;
+      renderPreviews();
+    } catch (err) {
+      console.error(err);
+      alert('Segmentation failed. Please try again.');
+    } finally {
+      cropBtn.disabled = false;
+      cropBtn.textContent = originalText;
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

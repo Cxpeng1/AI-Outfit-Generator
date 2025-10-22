@@ -9,4 +9,5 @@ urlpatterns = [
     path('login_page/', views.login_page, name='login_page'),  # ✅ Add this line
     path('generate/', views.generate_outfit, name='generate_outfit'),
     path('register/', views.register, name='register'),  
+    path('segment_shirt/', views.segment_shirt, name='segment_shirt'),
 ]
