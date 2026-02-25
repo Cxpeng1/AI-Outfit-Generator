@@ -104,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kuala_Lumpur'
 
 USE_I18N = True
 
@@ -115,6 +115,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "main/static",
+]
+# Media files (user-uploaded content)
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOGIN_REDIRECT_URL = '/main/login_page/'
+
+
+SEG_MODEL_PATH = r"C:\Users\cxpen\Documents\Year 3 Sem 1\FYP\FYP\outfitgen\main\models\best.pt"
+SEG_DEVICE = "cpu"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
